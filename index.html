@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<title>Gioco dell'Oca WWII - 2 Squadre</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&display=swap" rel="stylesheet">
+
+<style>
+body {
+    font-family: 'Cinzel', serif;
+    background: #d9c7a1;
+    text-align: center;
+}
+
+h1 { color: #4b2e1e; }
+
+#board {
+    position: relative;
+    width: 1500px;
+    height: 850px;
+    margin: 30px auto;
+}
+
+.cell {
+    position: absolute;
+    width: 170px;
+    height: 130px;
+    border-radius: 18px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    font-size: 15px;
+    font-weight: bold;
+    padding: 6px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+}
+
+.cell img {
+    width: 85px;
+    height: 55px;
+    object-fit: cover;
+    margin-top: 5px;
+    border-radius: 8px;
+}
+
+.start { background: #6aa84f; color: white; }
+.end { background: #cc0000; color: white; }
+.positive { background: #93c47d; }
+.negative { background: #e06666; color: white; }
+.question { background: #6fa8dc; color: white; font-size: 42px; }
+.normal { background: #f5e6c8; }
+
+.player {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    position: absolute;
+    border: 4px solid white;
+    box-shadow: 0 0 10px rgba(0,0,0,0.8);
+}
+
+#dice {
+    width: 120px;
+    height: 120px;
+    margin: 10px auto;
+    background: white;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 55px;
+}
+
+button {
+    padding: 16px 32px;
+    font-size: 20px;
+    border-radius: 10px;
+    background: #8b5a2b;
+    color: white;
+    cursor: pointer;
+}
+
+#infoBox {
+    background: #fff3cd;
+    padding: 18px;
+    margin: 20px auto;
+    width: 60%;
+    border-radius: 10px;
+    display: none;
+    font-weight: bold;
+    border: 3px solid #4b2e1e;
+}
+</style>
+</head>
+<body>
+
+<h1>🪖 Gioco dell'Oca - Seconda Guerra Mondiale</h1>
+
+<div id="dice">🎲</div>
+<button onclick="rollDice()">Lancia il dado</button>
+
+<div id="board"></div>
+<div id="infoBox"></div>
+
+<script>
+const totalCells = 30;
+
+/* SOLO 2 PEDINE */
+const players = [
+    {name: "Squadra A", position: 1, color: "red"},
+    {name: "Squadra B", position: 1, color: "blue"}
+];
+
+let currentPlayer = 0;
+
+let deck = Array.from({length: 18}, (_, i) => i + 1);
+shuffle(deck);
+
+const board = document.getElementById("board");
+
+const positions = [
+{left:0,top:0},{left:170,top:0},{left:340,top:0},{left:510,top:0},{left:680,top:0},{left:850,top:0},{left:1020,top:0},{left:1190,top:0},{left:1360,top:0},
+{left:1360,top:150},{left:1190,top:150},{left:1020,top:150},{left:850,top:150},{left:680,top:150},{left:510,top:150},{left:340,top:150},{left:170,top:150},{left:0,top:150},
+{left:0,top:300},{left:170,top:300},{left:340,top:300},{left:510,top:300},{left:680,top:300},{left:850,top:300},{left:1020,top:300},{left:1190,top:300},{left:1360,top:300},
+{left:1360,top:450},{left:1190,top:450},{left:1020,top:450}
+];
+
+const specialMap = {
+1:"start",3:"positive",5:"negative",7:"question",10:"negative",
+12:"question",15:"negative",18:"question",20:"positive",
+22:"question",25:"positive",27:"question",28:"negative",30:"end"
+};
+
+for (let i = 1; i <= totalCells; i++) {
+    let cell = document.createElement("div");
+    let type = specialMap[i] || "normal";
+
+    cell.classList.add("cell", type);
+    cell.style.left = positions[i-1].left + "px";
+    cell.style.top = positions[i-1].top + "px";
+
+    let content = i;
+
+    if (i === 1) content = "PARTENZA";
+    if (i === 3) content = "GUERRA LAMPO +2 <img src='CARROARMATO.png'>";
+    if (i === 5) content = "BOMBARDAMENTI -2 <img src='BOMBARDAMENTI.png'>";
+    if (i === 7) content = "?";
+    if (i === 10) content = "PEARL HARBOR <img src='PEARL HARBOR.png'>";
+    if (i === 12) content = "?";
+    if (i === 15) content = "INVERNO RUSSO -2 <img src='CAMPAGNA DI RUSSIA.png'>";
+    if (i === 18) content = "?";
+    if (i === 20) content = "STALINGRADO +2 <img src='CARROARMATO.png'>";
+    if (i === 22) content = "?";
+    if (i === 25) content = "D-DAY +2 <img src='SBARCO IN NORMANDIA D DAY.png'>";
+    if (i === 27) content = "?";
+    if (i === 28) content = "BOMBA ATOMICA -2 <img src='23 - BOMBA ATOMICA.png'>";
+    if (i === 30) content = "PACE <img src='PACE.png'>";
+
+    cell.innerHTML = content;
+    cell.id = "cell-" + i;
+    board.appendChild(cell);
+}
+
+function shuffle(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+}
+
+function updateBoard() {
+    document.querySelectorAll(".player").forEach(p => p.remove());
+
+    players.forEach((p, index) => {
+        let piece = document.createElement("div");
+        piece.classList.add("player");
+        piece.style.background = p.color;
+
+        piece.style.left = (index * 60) + "px";
+        piece.style.top = "10px";
+
+        document.getElementById("cell-" + p.position).appendChild(piece);
+    });
+}
+
+function rollDice() {
+    const diceEl = document.getElementById("dice");
+    diceEl.style.transform = "rotate(" + (Math.random()*720) + "deg)";
+
+    let dice = Math.floor(Math.random() * 6) + 1;
+
+    setTimeout(() => {
+        diceEl.innerText = dice;
+
+        let player = players[currentPlayer];
+        player.position += dice;
+
+        if (player.position > totalCells) player.position = totalCells;
+
+        handleCell(player);
+
+        if (player.position === totalCells) {
+            alert(player.name + " ha vinto! 🎉");
+            return;
+        }
+
+        currentPlayer = (currentPlayer + 1) % players.length;
+        updateBoard();
+
+    }, 500);
+}
+
+function handleCell(player) {
+    const type = specialMap[player.position];
+    const box = document.getElementById("infoBox");
+
+    if (type === "question") {
+        if (deck.length > 0) {
+            let card = deck.shift();
+            box.innerText = player.name + ": pesca la FLASHCARD n° " + card;
+        } else {
+            box.innerText = "Domande terminate";
+        }
+        box.style.display = "block";
+    }
+
+    if (type === "positive") player.position += 2;
+
+    if (type === "negative") {
+        player.position -= 2;
+        if (player.position < 1) player.position = 1;
+    }
+}
+
+updateBoard();
+</script>
+
+</body>
+</html>
